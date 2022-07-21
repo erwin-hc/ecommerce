@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+
+	<style>
+
+		table {
+			margin: 0 auto;
+			border-collapse: collapse;
+			width: 80%;
+			text-align: left;
+		}
+		thead, th {
+			background-color: #cecece;
+			padding: .5rem;
+		}
+		tr, td {
+			border: 1px solid #000000bf;
+			padding: .5rem;
+		}
+
+		form {
+			display: flex;
+			flex-direction: column;
+			margin: 0 auto;
+			width: 80%;
+			text-align: left;
+		}
+		form input {
+			max-width: 400px;
+			padding: .5rem;
+			width: 100%;
+			display: block;
+			border: 1px solid #cecece;
+		}
+		form div {
+			padding-bottom: .5rem;
+			width: 100%;
+		}
+
+		.btn {
+			display: inline-block;
+			padding: .25rem;
+			margin: .5rem .25rem .5rem 0;
+			width: 150px;
+			cursor: pointer;
+			text-align: center;
+			/*border: none;*/
+			border-radius: 5px;
+			
+		}
+		.btn-formUser-salvar {
+			background-color: #5bc0de60;
+		}
+		.btn-formUser-salvar:hover{
+			background-color: #5bc0de;
+		}
+		.btn-formUser-deletar {
+			background-color: #d9534f60;
+		}
+		.btn-formUser-deletar:hover{
+			background-color: #d9534f;
+		}
+		.btn-formUser-update {
+			background-color: #f0ad4e60;
+		}
+		.btn-formUser-update:hover{
+			background-color: #f0ad4e;
+		}
+
+		.btn[disabled] {
+    		background-color: #cecece;
+    		cursor: not-allowed;
+		}
+
+
+
+
+		.btn-tableUser-editar {
+			color: #5cb85c;
+			border: none;
+
+			display: flex;
+			align-items: center;
+			justify-content: center;
+
+			padding: .25rem;
+			margin: .25rem;
+			cursor: pointer;
+
+			
+		}
+		.btn-tableUser-deletar {
+			color: #d9534f;
+			border: none;
+
+			display: flex;
+			align-items: center;
+			justify-content: center;
+
+			padding: .25rem;
+			margin: .25rem;
+			cursor: pointer;
+			
+		}
+
+		.invalid {
+			background-color: #d9534f40;
+		}
+		input:valid {
+			border: 1px solid #cecece;
+			background-color: transparent;
+
+		}
+
+		input:focus {
+		box-shadow: 0 0 0 0;
+		outline: 1;
+		}
+
+
+	</style>
+</head>
+<body>
+
+	<!-- FORM USUARIOS -->
+	<form action="" class="form-usuarios">
+		<h3>ADICIONAR USUARIOS</h3>
+		<div>
+			<input spellcheck="false" autocomplete="off" data-formUser="nome" type="text" name="nome" placeholder="Nome" required>	 
+		</div>
+		<div>
+			<input spellcheck="false" autocomplete="off" data-formUser="email" type="text" name="email" placeholder="Email" required>
+			
+		</div>
+		<div>
+			<input spellcheck="false" autocomplete="off" data-formUser="senha" type="text" name="senha" placeholder="Senha" required>
+			
+		</div>
+		<div>
+			<input data-formUser="btn-salvar" 		class="btn btn-formUser-salvar" value="Salvar"       type="button">		
+			<input data-formUser="btn-update"  class="btn btn-formUser-update" value="Update"  type="button" disabled>	
+			<input data-formUser="btn-deletarTudo"  class="btn btn-formUser-deletar" value="Apagar-Tudo"  type="button">	
+		</div>
+	</form>
+
+	<!-- LISTA USUARIOS -->
+	<table class="tabela__usuarios">
+		<thead>
+			<tr>
+				<th colspan="7">TABELA USUARIOS</th>
+			</tr>
+			<tr>
+				<th>ID</th>
+				<th>NOME</th>
+				<th>EMAIL</th>
+				<th>SENHA</th>
+				<th>TIPO</th>
+				<th>EDITAR</th>
+				<th>DELETAR</th>
+			</tr>
+		</thead>
+		<tbody></tbody>
+	</table>
+	
+</body>
+<script>
+
+// ---------------------------------------------------
+// HELPERS
+	function l(dados) {
+		return console.log(dados);
+	}
+// ---------------------------------------------------
+	function pegaElem(elemento) {
+		return document.querySelector(elemento);
+	}
+
+// ---------------------------------------------------
+// ---------------------------------------------------
+// ---------------------------------------------------
+// BASE DE DADOS
+
+var bd_usuarios = [
+	{
+	"id":1,
+	"nome":"ERWIN GUILHERME STEIN",
+	"email":"erwin.stein@gmail.com",
+	"senha":"erwin", 
+	"tipo":"ADM",
+	}
+ ];
+
+
+// SALVA DADOS LOCAL STORAGE
+function salvaDadosLocalStorage(bd) {
+	localStorage.setItem('bd_usuarios', JSON.stringify(bd));
+}
+// PEDGA DADOS LOCAL STORAGE
+function pegaDadosLocalStorage() {
+	var obj = JSON.parse(localStorage.getItem('bd_usuarios'));
+	return obj;	
+}
+
+// VERIFICA LOCAL STORAGE SE ESTIVER VAZIO ADICIONA UM ITEM
+window.onload = verificaLocalStorage();
+
+function verificaLocalStorage() {
+	var obj = pegaDadosLocalStorage();
+	if (obj == null) {
+		salvaDadosLocalStorage(bd_usuarios);
+	}
+}
+
+populaTabelaUsuarios();
+
+
+// ---------------------------------------------------
+// ---------------------------------------------------
+// ---------------------------------------------------
+// FUNCOES GERAIS
+var formImputNome = pegaElem('[data-formUser="nome"]');
+var formImputEmail = pegaElem('[data-formUser="email"]');
+var formImputSenha = pegaElem('[data-formUser="senha"]');
+var form = pegaElem('.form-usuarios');
+
+// CREATE
+// INSERIR DADOS
+function inserirDados() {
+
+	var obj = pegaDadosLocalStorage();
+	var id = obj.length + 1;
+	
+	if (formImputNome.value === "") {
+		formImputNome.focus();
+		formImputNome.placeholder = "Digite um nome!"
+		formImputNome.classList.add('invalid')
+		
+		setTimeout(function () {
+			formImputNome.placeholder = "Nome"
+			formImputNome.classList.remove('invalid')
+		},800);
+	}
+	else if (formImputEmail.value === "") 
+	{
+		formImputEmail.focus();
+		formImputEmail.placeholder = "Digite um email!"
+		formImputEmail.classList.add('invalid')
+
+		setTimeout(function () {
+			formImputEmail.placeholder = "Email"
+			formImputEmail.classList.remove('invalid')
+		},800);
+	}
+	else if (formImputSenha.value === "") 
+	{
+		formImputSenha.focus();
+		formImputSenha.placeholder = "Digite uma senha!"
+		formImputSenha.classList.add('invalid')
+
+		setTimeout(function () {
+			formImputSenha.placeholder = "Senha"
+			formImputSenha.classList.remove('invalid')
+		},800);
+	}
+	else
+	{		
+			var usuario = {
+				id    : id,
+				nome  : formImputNome.value.toUpperCase(),
+				email : formImputEmail.value.toLowerCase(),
+				senha : formImputSenha.value.toLowerCase(),
+				tipo  : 'USUARIO'
+			};
+
+			obj.push(usuario);
+			salvaDadosLocalStorage(obj);
+			form.reset();
+			formImputNome.focus();
+	}	
+}
+
+
+// READ
+// POPULA TABELA USUARIOS
+function populaTabelaUsuarios() {
+	verificaLocalStorage();
+	var obj = pegaDadosLocalStorage();
+	var tbody = pegaElem('.tabela__usuarios').querySelector('tbody');
+	tbody.innerHTML = "";
+	
+		obj.forEach(function (index, i) {
+
+		var html = `
+		<tr>
+			<td id='tdId'>${index.id}</td>
+			<td id='tdNome'>${index.nome}</td>
+			<td id='tdEmail'>${index.email}</td>
+			<td id='tdSenha'>${index.senha}</td>
+			<td id='tdTipo'>${index.tipo}</td>
+			<td>
+			<a class="btn-tableUser-editar" data-acao="editar" data-index=${i}>
+				<i class="fa-solid fa-pen-to-square fa-xl"></i>
+			</a>
+			</td>
+			<td>
+			<a class="btn-tableUser-deletar" data-acao="excluir" data-index=${i}">
+			 	<i class="fa-solid fa-trash-can fa-xl"></i>
+			</a>
+			</td>
+		</tr> `
+
+		tbody.innerHTML += html;
+
+	});
+
+}
+
+// UPDATE
+function editarDados(rowIndex) {
+	var obj = pegaDadosLocalStorage();
+
+	var index = rowIndex - 1;
+
+	obj[index] = {
+
+		id    : obj[index].id,
+		nome  : formImputNome.value.toUpperCase(),
+		email : formImputEmail.value.toLowerCase(),
+		senha : formImputSenha.value.toLowerCase(),
+		tipo  : obj[index].tipo,
+	};
+
+	salvaDadosLocalStorage(obj);
+	populaTabelaUsuarios();
+
+}
+
+// UPDATE
+function deletarDados(rowIndex) {
+	var obj = pegaDadosLocalStorage();
+
+	var index = rowIndex - 1;
+
+	obj.splice([index]);
+
+	salvaDadosLocalStorage(obj);
+	populaTabelaUsuarios();
+
+}
+
+
+
+
+
+	
+	var bntFormSalvar = pegaElem('[data-formUser="btn-salvar"]');
+	var btnFormDeletarTudo = pegaElem('[data-formUser="btn-deletarTudo"]');
+	var btnFormUpdate = pegaElem('[data-formUser="btn-update"]');
+
+	var btnTableUserEditar = document.querySelectorAll('.btn-tableUser-editar');
+	var btnTableUserDeletar = document.querySelectorAll('.btn-tableUser-deletar');
+	
+	// CLICK BOTAO FORMULARIO INSERIR
+	bntFormSalvar.addEventListener('click', function (e) {
+			e.preventDefault();
+			inserirDados();
+			populaTabelaUsuarios();
+			window.location.reload();	
+	})
+
+	// CLICK BOTAO FORMULARIO DELETAR TUDO
+	btnFormDeletarTudo.addEventListener('click', function (e) {
+			e.preventDefault();
+			window.localStorage.removeItem("bd_usuarios");
+			populaTabelaUsuarios();
+			window.location.reload();	
+	})
+
+	// CLICK BOTAO FORMULARIO UPDATE
+	btnFormUpdate.addEventListener('click', function (e) {
+				e.preventDefault();
+				btnFormUpdate.disabled = true;
+				bntFormSalvar.disabled = false;
+				btnFormDeletarTudo.disabled = false;
+				editarDados(rowIndex);
+				form.reset();
+				formImputNome.focus();
+				window.location.reload();
+	})
+
+
+
+	// CLIC NOS BOTOES DE EDITAR DA TABELA USUARIO
+	var rowIndex = null;
+	btnTableUserEditar.forEach(function (btn) {
+			btn.addEventListener('click', function (event) {
+
+						var tdIdText = event.path[3].cells[0].innerText;
+						var tdNomeText = event.path[3].cells[1].innerText;
+						var tdEmailText = event.path[3].cells[2].innerText;
+						var tdSenhaText = event.path[3].cells[3].innerText;
+						var tdTipoText = event.path[3].cells[4].innerText;
+
+						if (tdIdText == 1) {
+							return
+						} 
+						else
+						{
+							btnFormUpdate.disabled = false;
+							bntFormSalvar.disabled = true;
+							btnFormDeletarTudo.disabled = true;
+
+
+
+							formImputNome.value = tdNomeText;
+							formImputEmail.value = tdEmailText;
+							formImputSenha.value = tdSenhaText;	
+							formImputNome.focus();
+
+							return rowIndex = tdIdText;	
+						}
+
+			})
+	})
+
+	// CLIC NOS BOTOES DE DELETAR DA TABELA USUARIO
+	var rowIndex = null;
+	btnTableUserDeletar.forEach(function (btn) {		
+		btn.addEventListener('click', function (event) {
+			var tdIdText = event.path[3].cells[0].innerText;
+
+			if (tdIdText == 1) {
+				return
+			} else
+			{
+				deletarDados(tdIdText);
+				form.reset();
+				formImputNome.focus();
+				window.location.reload();	
+			}
+
+
+		})
+	})
+
+</script>
+
+
+</html>
